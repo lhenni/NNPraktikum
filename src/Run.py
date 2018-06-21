@@ -5,6 +5,7 @@ from data.mnist_seven import MNISTSeven
 from model.stupid_recognizer import StupidRecognizer
 from model.perceptron import Perceptron
 from model.logistic_regression import LogisticRegression
+from model.mlp import MultilayerPerceptron
 
 from report.evaluator import Evaluator
 from report.performance_plot import PerformancePlot
@@ -29,6 +30,11 @@ def main():
                                         learningRate=0.005,
                                         epochs=30)
                                         
+    myMLPClassifier = MultilayerPerceptron(data.trainingSet,
+                                        data.validationSet,
+                                        data.testSet,
+                                        learningRate=0.005,
+                                        epochs=30)
     
     # Report the result #
     print("=========================")
@@ -50,11 +56,16 @@ def main():
     myLRClassifier.train()
     print("Done..")
 
+    print("\nMLP has been training..")
+    myMLPClassifier.train()
+    print("Done..")
+
     # Do the recognizer
     # Explicitly specify the test set to be evaluated
     stupidPred = myStupidClassifier.evaluate()
     perceptronPred = myPerceptronClassifier.evaluate()
     lrPred = myLRClassifier.evaluate()
+    mlpPred = myMLPClassifier.evaluate()
     
     # Report the result
     print("=========================")
@@ -71,6 +82,10 @@ def main():
     print("\nResult of the Logistic Regression recognizer:")
     #evaluator.printComparison(data.testSet, lrPred)    
     evaluator.printAccuracy(data.testSet, lrPred)
+
+    print("\nResult of the MLP recognizer:")
+    #evaluator.printComparison(data.testSet, mlpPred)
+    evaluator.printAccuracy(data.testSet, mlpPred)
     
     # Draw
     plot = PerformancePlot("Logistic Regression validation")
