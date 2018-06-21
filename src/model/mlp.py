@@ -61,6 +61,8 @@ class MultilayerPerceptron(Classifier):
         
         if loss == 'bce':
             self.loss = BinaryCrossEntropyError()
+        elif loss == 'cee':
+            self.loss = CrossEntropyError()
         elif loss == 'sse':
             self.loss = SumSquaredError()
         elif loss == 'mse':
@@ -71,7 +73,7 @@ class MultilayerPerceptron(Classifier):
             self.loss = AbsoluteError()
         else:
             raise ValueError('There is no predefined loss function ' +
-                             'named ' + str)
+                             'named ' + str(loss))
 
         # Record the performance of each epoch for later usages
         # e.g. plotting, reporting..
