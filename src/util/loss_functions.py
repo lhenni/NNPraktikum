@@ -7,6 +7,7 @@ Loss functions.
 
 import numpy as np
 
+from numpy import log
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 
@@ -122,7 +123,11 @@ class CrossEntropyError(Error):
         self.errorString = 'crossentropy'
 
     def calculateError(self, target, output):
-        pass
+        # Page 55 BackPropagation slides
+        # CEE = -sum (i=1 to n) of (target_i * log(output_i) + (1 - target_i) * log(1 - output_i))
+        return -np.sum(target * log(output) + (1.0 - target) * log(1.0 - output))
         
-    def calculateDerivativer(self, target, output):
-        pass
+    def calculateDerivative(self, target, output):
+        # Page 55 BackPropagation slides
+        # CEEPrime = -(target_i / output_i) + (1 - target_i) / (1 - output_j)
+        return -(target / output) + (1.0 - target) / (1.0 - output)
