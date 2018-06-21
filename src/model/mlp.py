@@ -95,11 +95,11 @@ class MultilayerPerceptron(Classifier):
         self.inputWeights = inputWeights
 
         # add bias values ("1"s) at the beginning of all data sets
-        #self.trainingSet.input = np.insert(self.trainingSet.input, 0, 1,
-        #                                    axis=1)
-        #self.validationSet.input = np.insert(self.validationSet.input, 0, 1,
-        #                                      axis=1)
-        #self.testSet.input = np.insert(self.testSet.input, 0, 1, axis=1)
+        self.trainingSet.input = np.insert(self.trainingSet.input, 0, 1,
+                                            axis=1)
+        self.validationSet.input = np.insert(self.validationSet.input, 0, 1,
+                                              axis=1)
+        self.testSet.input = np.insert(self.testSet.input, 0, 1, axis=1)
 
 
     def _get_layer(self, layer_index):
@@ -126,8 +126,10 @@ class MultilayerPerceptron(Classifier):
         nextInput = inp
         for layer in self.layers:
             layer.forward(nextInput)
-            # output of the previous layer is the input of the next layer:
+            # Output of the previous layer is the input of the next layer:
             nextInput = layer.outp
+            # Add bias "1" at the beginning:
+            nextInput = np.insert(nextInput, 0, 1)
 
     def _compute_error(self, target):
         """
@@ -172,7 +174,8 @@ class MultilayerPerceptron(Classifier):
 
                     # Update the weights:
                     layer.updateWeights(self.learningRate)
-                    next_weights = layer.weights.T
+                    # Remove bias from weights, so it matches the output size of the next layer:
+                    next_weights = layer.weights[1:,:].T
 
             if (verbose):
                 logging.info("Epoch: %i", epoch + 1)
