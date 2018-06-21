@@ -1,6 +1,11 @@
 
 import numpy as np
 
+from util.loss_functions import BinaryCrossEntropyError
+from util.loss_functions import SumSquaredError
+from util.loss_functions import MeanSquaredError
+from util.loss_functions import DifferentError
+from util.loss_functions import AbsoluteError
 from util.loss_functions import CrossEntropyError
 from model.logistic_layer import LogisticLayer
 from model.classifier import Classifier
@@ -8,6 +13,11 @@ from model.classifier import Classifier
 from sklearn.metrics import accuracy_score
 
 import sys
+import logging
+
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                    level=logging.DEBUG,
+                    stream=sys.stdout)
 
 class MultilayerPerceptron(Classifier):
     """
@@ -43,7 +53,7 @@ class MultilayerPerceptron(Classifier):
         self.epochs = epochs
         self.outputTask = outputTask  # Either classification or regression
         self.outputActivation = outputActivation
-        self.cost = cost
+        self.cost = []
 
         self.trainingSet = train
         self.validationSet = valid
@@ -85,11 +95,11 @@ class MultilayerPerceptron(Classifier):
         self.inputWeights = inputWeights
 
         # add bias values ("1"s) at the beginning of all data sets
-        self.trainingSet.input = np.insert(self.trainingSet.input, 0, 1,
-                                            axis=1)
-        self.validationSet.input = np.insert(self.validationSet.input, 0, 1,
-                                              axis=1)
-        self.testSet.input = np.insert(self.testSet.input, 0, 1, axis=1)
+        #self.trainingSet.input = np.insert(self.trainingSet.input, 0, 1,
+        #                                    axis=1)
+        #self.validationSet.input = np.insert(self.validationSet.input, 0, 1,
+        #                                      axis=1)
+        #self.testSet.input = np.insert(self.testSet.input, 0, 1, axis=1)
 
 
     def _get_layer(self, layer_index):
@@ -113,7 +123,12 @@ class MultilayerPerceptron(Classifier):
         # Here you have to propagate forward through the layers
         # And remember the activation values of each layer
         """
-        
+        nextInput = inp
+        for layer in self.layers:
+            layer.forward(nextInput)
+            # output of the previous layer is the input of the next layer:
+            nextInput = layer.outp
+
     def _compute_error(self, target):
         """
         Compute the total error of the network (error terms from the output layer)
@@ -139,15 +154,47 @@ class MultilayerPerceptron(Classifier):
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
         """
-        pass
+        for epoch in range(self.epochs):
+            for input, label in zip(self.trainingSet.input, self.trainingSet.label):
+                # Compute the network output via feed forward:
+                self._feed_forward(input)
+
+                # Backpropagation of error:
+                # To calculate the derivatives, we iterate over the layers in reverse order:
+                # In case of the output layer, next_weights is array of 1
+                # and next_derivatives - the derivative of the error will be the errors
+                output = self._get_output_layer().outp
+                next_derivatives = self.loss.calculateDerivative(label, output)
+                next_weights = 1.0
+                for layer in reversed(self.layers):
+                    # Compute the derivatives:
+                    next_derivatives = layer.computeDerivative(next_derivatives, next_weights)
+
+                    # Update the weights:
+                    layer.updateWeights(self.learningRate)
+                    next_weights = layer.weights.T
+
+            if (verbose):
+                logging.info("Epoch: %i", epoch + 1)
 
 
 
     def classify(self, test_instance):
-        # Classify an instance given the model of the classifier
-        # You need to implement something here
-        pass
-        
+        """Classify a single instance.
+
+        Parameters
+        ----------
+        test_instance : list of floats
+
+        Returns
+        -------
+        bool :
+            True if the testInstance is recognized as a 7, False otherwise.
+        """
+        # Compute the network output via feed forward:
+        self._feed_forward(test_instance)
+        output = self._get_output_layer().outp
+        return np.argmax(output) == 7
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
