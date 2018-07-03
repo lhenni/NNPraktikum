@@ -193,13 +193,17 @@ class MultilayerPerceptron(Classifier):
 
         Returns
         -------
-        bool :
-            True if the testInstance is recognized as a 7, False otherwise.
+        int :
+            The recognized digit (0-9).
         """
         # Compute the network output via feed forward:
-        self._feed_forward(test_instance)
+        # TODO temp debugging
+        #self._feed_forward(test_instance)
+        self._feed_forward(test_instance[0])
         output = self._get_output_layer().outp
-        return np.argmax(output) == 7
+        result = np.argmax(output)
+        logging.info("Result: %i, Label: %i", result, test_instance[1])
+        return result
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
@@ -215,7 +219,9 @@ class MultilayerPerceptron(Classifier):
             List of classified decisions for the dataset's entries.
         """
         if test is None:
-            test = self.testSet.input
+            #TODO temp zip for debugging
+            test = zip(self.testSet.input, self.testSet.label)
+            #test = self.testSet.input
         # Once you can classify an instance, just use map for all of the test
         # set.
         return list(map(self.classify, test))
