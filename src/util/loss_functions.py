@@ -125,9 +125,9 @@ class CrossEntropyError(Error):
     def calculateError(self, target, output):
         # Page 55 BackPropagation slides
         # CEE = -sum (i=1 to n) of (target_i * log(output_i) + (1 - target_i) * log(1 - output_i))
-        return -np.sum(target * log(output) + (1.0 - target) * log(1.0 - output))
+        return -np.sum(target * log(output + 1e-8) + (1.0 - target) * log(1.0 - output + 1e-8))
         
     def calculateDerivative(self, target, output):
         # Page 55 BackPropagation slides
         # CEEPrime = -(target_i / output_i) + (1 - target_i) / (1 - output_j)
-        return -(target / output) + (1.0 - target) / (1.0 - output)
+        return -(target / (output + 1e-8)) + (1.0 - target) / (1.0 - output + 1e-8)
