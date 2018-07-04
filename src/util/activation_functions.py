@@ -6,7 +6,6 @@ Activation functions which can be used within neurons.
 
 import numpy as np
 
-from numpy import max
 from numpy import exp
 from numpy import sum
 from numpy import divide
@@ -70,7 +69,7 @@ class Activation:
         # Page 49 BackPropagation slides
         # ex = exp(netOutput)
         # Numerically more stable:
-        ex = exp(netOutput - max(netOutput))
+        ex = exp(netOutput - np.max(netOutput))
         return ex / sum(ex)
         
     @staticmethod
