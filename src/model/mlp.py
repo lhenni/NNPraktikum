@@ -154,10 +154,26 @@ class MultilayerPerceptron(Classifier):
         """
         return self.loss.calculateDerivative(target, self._get_output())
     
-    def _update_weights(self, learningRate):
+    def _update_weights(self, learningRate, label):
         """
         Update the weights of the layers by propagating back the error
         """
+        # Backpropagation of error:
+        # To calculate the derivatives, we iterate over the layers in reverse order:
+        # In case of the output layer, next_weights is array of 1
+        # and next_derivatives - the derivative of the error will be the errors
+        target = np.zeros(self._get_output_layer().nOut)
+        target[label] = 1
+        next_derivatives = self._compute_error(target)
+        # this produces a result equivalent to using the identity
+        next_weights = 1.0
+        for layer in reversed(self.layers):
+            # Compute the derivatives:
+            next_derivatives = layer.computeDerivative(next_derivatives, next_weights)
+            # Remove bias from weights, so it matches the output size of the next layer:
+            next_weights = layer.weights[1:,:].T
+
+        # Update the weights:
         for layer in self.layers:
             layer.updateWeights(learningRate)
         
@@ -202,23 +218,8 @@ class MultilayerPerceptron(Classifier):
         for input, label in zip(self.trainingSet.input, self.trainingSet.label):
             # Compute the network output via feed forward:
             self._feed_forward(input)
-
-            # Backpropagation of error:
-            # To calculate the derivatives, we iterate over the layers in reverse order:
-            # In case of the output layer, next_weights is array of 1
-            # and next_derivatives - the derivative of the error will be the errors
-            target = np.zeros(self._get_output_layer().nOut)
-            target[label] = 1
-            next_derivatives = self._compute_error(target)
-            next_weights = 1.0
-            for layer in reversed(self.layers):
-                # Compute the derivatives:
-                next_derivatives = layer.computeDerivative(next_derivatives, next_weights)
-                # Remove bias from weights, so it matches the output size of the next layer:
-                next_weights = layer.weights[1:,:].T
-
-            # Update the weights:
-            self._update_weights(self.learningRate)
+            # Backpropagate the error and update the weights
+            self._update_weights(self.learningRate, label)
 
     def classify(self, test_instance):
         """Classify a single instance.
