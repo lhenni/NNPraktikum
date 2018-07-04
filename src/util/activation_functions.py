@@ -4,6 +4,8 @@
 Activation functions which can be used within neurons.
 """
 
+import numpy as np
+
 from numpy import max
 from numpy import exp
 from numpy import sum
@@ -67,15 +69,18 @@ class Activation:
     def softmax(netOutput):
         # Page 49 BackPropagation slides
         # ex = exp(netOutput)
-        # Numerically more stable / prevent overflowing:
+        # Numerically more stable:
         ex = exp(netOutput - max(netOutput))
         return ex / sum(ex)
         
     @staticmethod
     def softmaxPrime(netOutput):
         # Page 49 BackPropagation slides
-        sm = Activation.softmax(netOutput)
-        return sm * (1.0 - sm)
+        #sm = Activation.softmax(netOutput)
+        #return sm * (1.0 - sm)
+        return netOutput * (1.0 - netOutput)
+        #s = netOutput.reshape(-1,1)
+        #return np.diag(netOutput) - np.dot(s, s.T)
         
     @staticmethod
     def getActivation(str):
