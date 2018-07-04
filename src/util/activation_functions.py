@@ -4,6 +4,7 @@
 Activation functions which can be used within neurons.
 """
 
+from numpy import max
 from numpy import exp
 from numpy import sum
 from numpy import divide
@@ -65,7 +66,9 @@ class Activation:
     @staticmethod
     def softmax(netOutput):
         # Page 49 BackPropagation slides
-        ex = exp(netOutput)
+        # ex = exp(netOutput)
+        # Numerically more stable / prevent overflowing:
+        ex = exp(netOutput - max(netOutput))
         return ex / sum(ex)
         
     @staticmethod
