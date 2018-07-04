@@ -34,7 +34,7 @@ def main():
                                         data.validationSet,
                                         data.testSet,
                                         loss='cee',
-                                        learningRate=0.005,
+                                        learningRate=0.2,
                                         epochs=20)
     
     # Report the result #
@@ -95,7 +95,7 @@ def main():
 
     plot = PerformancePlot("MLP validation")
     plot.draw_performance_epoch(myMLPClassifier.performances,
-                                myMLPClassifier.epochs)
+                                len(myMLPClassifier.performances))
     
     
 if __name__ == '__main__':
