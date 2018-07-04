@@ -167,22 +167,31 @@ class MultilayerPerceptron(Classifier):
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
         """
+        #lastAccuracy = 0.0
         for epoch in range(self.epochs):
             if verbose:
                 print("Training epoch {0}/{1}.."
                       .format(epoch + 1, self.epochs))
 
+            # Train the network:
             self._train_one_epoch()
+            # Determine accuracy by evaluating the validation set:
+            accuracy = accuracy_score(self.validationSet.label, self.evaluate(self.validationSet))
+            # Record the performance of each epoch for later usages
+            # e.g. plotting, reporting..
+            self.performances.append(accuracy)
 
             if verbose:
-                accuracy = accuracy_score(self.validationSet.label,
-                                          self.evaluate(self.validationSet))
-                # Record the performance of each epoch for later usages
-                # e.g. plotting, reporting..
-                self.performances.append(accuracy)
                 print("Accuracy on validation: {0:.2f}%"
                       .format(accuracy * 100))
                 print("-----------------------------")
+
+            #if accuracy <= lastAccuracy:
+                # Reached stop criteria to prevent overfitting:
+                #print("Reached stop criteria")
+            #    break
+            # Else, update last accuracy:
+            #lastAccuracy = accuracy
 
     def _train_one_epoch(self):
         """
