@@ -121,17 +121,25 @@ class MultilayerPerceptron(Classifier):
         ----------
         inp : ndarray
             a numpy array containing the input of the layer
+        Returns
+        -------
+        outp: ndarray
+            The output of the last layer.
 
         # Here you have to propagate forward through the layers
         # And remember the activation values of each layer
         """
         nextInput = inp
-        for layer in self.layers:
-            layer.forward(nextInput)
-            # Output of the previous layer is the input of the next layer:
-            nextInput = layer.outp
-            # Add bias "1" at the beginning:
-            nextInput = np.insert(nextInput, 0, 1)
+        for layerIndex in range(len(self.layers)):
+            layer = self.layers[layerIndex]
+            # Output of this layer is the input of the next layer:
+            nextInput = layer.forward(nextInput)
+            # Add bias "1" at the beginning (except for last layer):
+            if layerIndex < (len(self.layers) - 1):
+                nextInput = np.insert(nextInput, 0, 1)
+
+        # Return the output of the last layer:
+        return nextInput
 
     def _compute_error(self, target):
         """
@@ -159,30 +167,44 @@ class MultilayerPerceptron(Classifier):
             Print logging messages with validation accuracy if verbose is True.
         """
         for epoch in range(self.epochs):
-            for input, label in zip(self.trainingSet.input, self.trainingSet.label):
-                # Compute the network output via feed forward:
-                self._feed_forward(input)
+            if verbose:
+                print("Training epoch {0}/{1}.."
+                      .format(epoch + 1, self.epochs))
 
-                # Backpropagation of error:
-                # To calculate the derivatives, we iterate over the layers in reverse order:
-                # In case of the output layer, next_weights is array of 1
-                # and next_derivatives - the derivative of the error will be the errors
-                output = self._get_output_layer().outp
-                next_derivatives = self.loss.calculateDerivative(label, output)
-                next_weights = 1.0
-                for layer in reversed(self.layers):
-                    # Compute the derivatives:
-                    next_derivatives = layer.computeDerivative(next_derivatives, next_weights)
+            self._train_one_epoch()
 
-                    # Update the weights:
-                    layer.updateWeights(self.learningRate)
-                    # Remove bias from weights, so it matches the output size of the next layer:
-                    next_weights = layer.weights[1:,:].T
+            if verbose:
+                accuracy = accuracy_score(self.validationSet.label,
+                                          self.evaluate(self.validationSet))
+                # Record the performance of each epoch for later usages
+                # e.g. plotting, reporting..
+                self.performances.append(accuracy)
+                print("Accuracy on validation: {0:.2f}%"
+                      .format(accuracy * 100))
+                print("-----------------------------")
 
-            if (verbose):
-                logging.info("Epoch: %i", epoch + 1)
+    def _train_one_epoch(self):
+        """
+        Train one epoch, seeing all input instances
+        """
+        for input, label in zip(self.trainingSet.input, self.trainingSet.label):
+            # Compute the network output via feed forward:
+            output = self._feed_forward(input)
 
+            # Backpropagation of error:
+            # To calculate the derivatives, we iterate over the layers in reverse order:
+            # In case of the output layer, next_weights is array of 1
+            # and next_derivatives - the derivative of the error will be the errors
+            next_derivatives = self.loss.calculateDerivative(label, output)
+            next_weights = 1.0
+            for layer in reversed(self.layers):
+                # Compute the derivatives:
+                next_derivatives = layer.computeDerivative(next_derivatives, next_weights)
 
+                # Update the weights:
+                layer.updateWeights(self.learningRate)
+                # Remove bias from weights, so it matches the output size of the next layer:
+                next_weights = layer.weights[1:,:].T
 
     def classify(self, test_instance):
         """Classify a single instance.
@@ -197,13 +219,8 @@ class MultilayerPerceptron(Classifier):
             The recognized digit (0-9).
         """
         # Compute the network output via feed forward:
-        # TODO temp debugging
-        #self._feed_forward(test_instance)
-        self._feed_forward(test_instance[0])
-        output = self._get_output_layer().outp
-        result = np.argmax(output)
-        logging.info("Result: %i, Label: %i", result, test_instance[1])
-        return result
+        output = self._feed_forward(test_instance)
+        return np.argmax(output)
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
@@ -219,9 +236,7 @@ class MultilayerPerceptron(Classifier):
             List of classified decisions for the dataset's entries.
         """
         if test is None:
-            #TODO temp zip for debugging
-            test = zip(self.testSet.input, self.testSet.label)
-            #test = self.testSet.input
+            test = self.testSet.input
         # Once you can classify an instance, just use map for all of the test
         # set.
         return list(map(self.classify, test))

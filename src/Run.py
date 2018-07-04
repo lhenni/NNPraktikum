@@ -92,6 +92,10 @@ def main():
     #plot = PerformancePlot("Logistic Regression validation")
     #plot.draw_performance_epoch(myLRClassifier.performances,
     #                            myLRClassifier.epochs)
+
+    plot = PerformancePlot("MLP validation")
+    plot.draw_performance_epoch(myMLPClassifier.performances,
+                                myMLPClassifier.epochs)
     
     
 if __name__ == '__main__':
