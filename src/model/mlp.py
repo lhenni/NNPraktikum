@@ -53,7 +53,6 @@ class MultilayerPerceptron(Classifier):
         self.epochs = epochs
         self.outputTask = outputTask  # Either classification or regression
         self.outputActivation = outputActivation
-        self.cost = []
 
         self.trainingSet = train
         self.validationSet = valid
@@ -113,6 +112,9 @@ class MultilayerPerceptron(Classifier):
     def _get_output_layer(self):
         return self._get_layer(-1)
 
+    def _get_output(self):
+        return self._get_output_layer().outp
+
     def _feed_forward(self, inp):
         """
         Do feed forward through the layers of the network
@@ -148,9 +150,9 @@ class MultilayerPerceptron(Classifier):
         Returns
         -------
         ndarray :
-            a numpy array (1,nOut) containing the output of the layer
+            a numpy array (1,nOut) containing the error
         """
-        pass
+        return self.loss.calculateDerivative(target, self._get_output())
     
     def _update_weights(self, learningRate):
         """
@@ -199,7 +201,7 @@ class MultilayerPerceptron(Classifier):
         """
         for input, label in zip(self.trainingSet.input, self.trainingSet.label):
             # Compute the network output via feed forward:
-            output = self._feed_forward(input)
+            self._feed_forward(input)
 
             # Backpropagation of error:
             # To calculate the derivatives, we iterate over the layers in reverse order:
@@ -207,7 +209,7 @@ class MultilayerPerceptron(Classifier):
             # and next_derivatives - the derivative of the error will be the errors
             target = np.zeros(self._get_output_layer().nOut)
             target[label] = 1
-            next_derivatives = self.loss.calculateDerivative(target, output)
+            next_derivatives = self._compute_error(target)
             next_weights = 1.0
             for layer in reversed(self.layers):
                 # Compute the derivatives:
