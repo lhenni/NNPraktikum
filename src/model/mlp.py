@@ -156,7 +156,8 @@ class MultilayerPerceptron(Classifier):
         """
         Update the weights of the layers by propagating back the error
         """
-        pass
+        for layer in self.layers:
+            layer.updateWeights(learningRate)
         
     def train(self, verbose=True):
         """Train the Multi-layer Perceptrons
@@ -195,16 +196,18 @@ class MultilayerPerceptron(Classifier):
             # To calculate the derivatives, we iterate over the layers in reverse order:
             # In case of the output layer, next_weights is array of 1
             # and next_derivatives - the derivative of the error will be the errors
-            next_derivatives = self.loss.calculateDerivative(label, output)
+            target = np.zeros(self._get_output_layer().nOut)
+            target[label] = 1
+            next_derivatives = self.loss.calculateDerivative(target, output)
             next_weights = 1.0
             for layer in reversed(self.layers):
                 # Compute the derivatives:
                 next_derivatives = layer.computeDerivative(next_derivatives, next_weights)
-
-                # Update the weights:
-                layer.updateWeights(self.learningRate)
                 # Remove bias from weights, so it matches the output size of the next layer:
                 next_weights = layer.weights[1:,:].T
+
+            # Update the weights:
+            self._update_weights(self.learningRate)
 
     def classify(self, test_instance):
         """Classify a single instance.
